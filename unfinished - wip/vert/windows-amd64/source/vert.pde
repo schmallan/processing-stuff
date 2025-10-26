@@ -1,0 +1,84 @@
+void setup(){
+  
+  //background
+  size(800, 800);
+  ellipse(400,400,5,5);
+  
+  }
+  
+//offset variables initialisation
+int tx = 0;
+int ty = 0;
+
+void draw(){
+  
+  //update offset values
+  tx = mouseX-400;
+  ty = mouseY-400;
+  
+  background(220);
+  
+  //head
+  fill(#A0E3C7);
+  beginShape();
+  vertex(tx+285,ty+477);vertex(tx+269,ty+447);vertex(tx+317,ty+414);vertex(tx+305,ty+339);vertex(tx+250,ty+304);vertex(tx+235,ty+278);vertex(tx+228,ty+247);vertex(tx+241,ty+199);vertex(tx+274,ty+164);vertex(tx+318,ty+141);vertex(tx+360,ty+133);vertex(tx+394,ty+129);vertex(tx+438,ty+132);vertex(tx+472,ty+139);vertex(tx+506,ty+158);vertex(tx+539,ty+179);vertex(tx+558,ty+207);vertex(tx+571,ty+237);vertex(tx+570,ty+271);vertex(tx+551,ty+309);vertex(tx+522,ty+330);vertex(tx+505,ty+339);vertex(tx+483,ty+346);vertex(tx+481,ty+425);vertex(tx+514,ty+444);vertex(tx+519,ty+466);vertex(tx+506,ty+486);vertex(tx+444,ty+469);vertex(tx+344,ty+460);vertex(tx+285,ty+477);
+  endShape();
+  
+  //shnoz
+  beginShape();
+  vertex(tx+390,ty+360);vertex(tx+406,ty+360);vertex(tx+426,ty+391);vertex(tx+443,ty+437);vertex(tx+444,ty+464);vertex(tx+428,ty+491);vertex(tx+408,ty+511);vertex(tx+390,ty+512);vertex(tx+370,ty+504);vertex(tx+354,ty+481);vertex(tx+348,ty+454);vertex(tx+353,ty+421);vertex(tx+362,ty+393);vertex(tx+374,ty+366);vertex(tx+390,ty+360);
+  endShape();
+  
+  fill(#FFFCDE);
+  //eyes
+  ellipse(tx+352,ty+325,90,115);
+  ellipse(tx+437,ty+328,90,115);
+  
+  fill(#552920);
+  //pupils
+  rectMode(CENTER);
+  rect(tx+431,ty+339,14,28);
+  rect(tx+365,ty+336,15,30);
+  
+  fill(#A0E3C7);
+  //left eyelid
+  beginShape();
+  vertex(tx+352,ty+335);vertex(tx+394,ty+334);vertex(tx+399,ty+327);vertex(tx+396,ty+315);vertex(tx+391,ty+293);vertex(tx+378,ty+272);vertex(tx+355,ty+266);vertex(tx+328,ty+271);vertex(tx+315,ty+289);vertex(tx+303,ty+322);vertex(tx+301,ty+329);vertex(tx+304,ty+339);vertex(tx+314,ty+340);vertex(tx+352,ty+335);
+  endShape();
+  
+  //right eyelid
+  beginShape();
+  vertex(tx+400,ty+335);vertex(tx+436,ty+335);vertex(tx+478,ty+337);vertex(tx+485,ty+333);vertex(tx+485,ty+323);vertex(tx+482,ty+314);vertex(tx+480,ty+302);vertex(tx+469,ty+286);vertex(tx+448,ty+269);vertex(tx+428,ty+268);vertex(tx+407,ty+279);vertex(tx+394,ty+302);vertex(tx+391,ty+318);vertex(tx+388,ty+327);vertex(tx+390,ty+333);vertex(tx+400,ty+335);
+  endShape();
+  
+  //mouth creases
+  line(tx+286,ty+452,tx+290,ty+466);
+  line(tx+507,ty+456,tx+501,ty+477);
+  
+  //mouth
+  line(tx+288,ty+461,tx+313,ty+449);line(tx+313,ty+449,tx+336,ty+444);line(tx+336,ty+444,tx+349,ty+443);
+  line(tx+444,ty+449,tx+475,ty+454);line(tx+475,ty+454,tx+504,ty+465);
+
+  fill(#19A27A);
+  //freckles
+  ellipse(tx+261,ty+214,10,6);ellipse(tx+309,ty+223,10,6);ellipse(tx+310,ty+180,10,6);ellipse(tx+353,ty+150,10,6);ellipse(tx+365,ty+200,10,6);ellipse(tx+412,ty+217,10,6);ellipse(tx+415,ty+167,10,6);ellipse(tx+466,ty+165,10,6);ellipse(tx+463,ty+213,10,6);ellipse(tx+507,ty+192,10,6);ellipse(tx+534,ty+228,10,6);
+
+  //brows
+  line(tx+300,ty+281,tx+392,ty+271);
+  line(tx+418,ty+253,tx+443,ty+240);line(tx+443,ty+240,tx+461,ty+237);line(tx+461,ty+237,tx+485,ty+253);line(tx+485,ty+253,tx+487,ty+274);
+
+}
+
+int ppressX = 0;
+int ppressY = 0;
+void mousePressed(){
+  
+  //vertex creating tool
+  //print("vertex(tx+"+mouseX+",ty+"+mouseY+");");
+  //print("line(tx+"+ppressX+",ty+"+ppressY+",tx+"+mouseX+",ty+"+mouseY+");");
+  //print("ellipse(tx+"+mouseX+",ty+"+mouseY+",10,6);");
+  
+  //ellipse(mouseX,mouseY,10,10);
+  ppressX = mouseX;
+  ppressY = mouseY;
+}
