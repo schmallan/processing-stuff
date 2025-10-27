@@ -7,17 +7,17 @@ ArrayList<int[][]> edges = new ArrayList();
 ArrayList<int[]> points = new ArrayList();
 ArrayList<int[][]> shapes = new ArrayList();
 
-
+int range = 500;
 void setup(){
     size(500,500);
     int[] pa = new int[]{0,100};
     int[] pb = new int[]{100,50};
     int[] pc = new int[]{-100,90};
     points.add(pa); points.add(pb); points.add(pc);
-    shapes.add(new int[][]{new int[]{#0000FF},pa,pb,pc});
-    edges.add(new int[][]{pa,pb});
-    edges.add(new int[][]{pb,pc});
-    edges.add(new int[][]{pc,pa});
+    addTriangle(#000000,pa,pb,pc);
+    edges.add(new int[][]{pa,pb,new int[]{#00FF00}});
+    edges.add(new int[][]{pb,pc,new int[]{#00FF00}});
+    edges.add(new int[][]{pc,pa,new int[]{#00FF00}});
 }
 void draw(){
     if (key('w')) camOffY++;
@@ -43,54 +43,99 @@ void draw(){
         shapeRender(i);
    //println();
     }
+    for (int[][] i : edges){
+        int[] p1 = worldToScreen(i[0]);
+        int[] p2 = worldToScreen(i[1]);
+        
+        stroke(i[2][0]);
+        strokeWeight(3);
+        line(p1[0],p1[1],p2[0],p2[1]);
+    }
+    
 }
 void mousePressed(){
     
     int[] s = screenToWorld(new int[]{mouseX,mouseY});
     if (s[1]<0) s[1]=0;
-   // addPoint(s);
+    addPoint(s);
     points.add(s);
-    println(isInside(points.get(0),points.get(1),points.get(2),s));
+    //println(isInside(points.get(0),points.get(1),points.get(2),s));
     
 }
 void addPoint(int[] s){
     
-    ArrayList<int[]> pts = new ArrayList();
-    points.add(s);
+    ArrayList<int[]> ptsInRange = new ArrayList();
+    //points.add(s);
         for (int[] point : points){
-            if (point == s){
-                continue;
-            }
+            
             int cont = (int)(sqrt(pow(point[0]-s[0],2)+pow(point[1]-s[1],2)));
-            if (cont<50) pts.add(point);
+            if (cont<range) ptsInRange.add(point);
         }
-        if (pts.size()>=2){
-        int[][] toadd = new int[pts.size()+1][];
-      //  toadd[0] = new int[]{#c2deff};
-        for(int i = 0; i<pts.size(); i++){
-            toadd[i+1] = pts.get(i);
-        }
-        //println("add");
-        shapeSort(toadd);
-        for (int i = 1; i<toadd.length; i++){
-            int[][] toaddTRI = new int[4][];
-            toaddTRI[0] = new int[]{ color( (int)(255*Math.random()),(int)(255*Math.random()),(int)(255*Math.random()))  };
-            int[] p1 = toadd[i];
-            int[] p2;
-            if (i+1>=toadd.length){
-                p2 = toadd[1];
-            } else {
-                p2 = toadd[i+1];
+    ArrayList<int[][]> edgesInRange = new ArrayList();
+        for (int[][] edge : edges){
+            int[] p1 = edge[0];
+            int[] p2 = edge[1];
+            if (ptsInRange.contains(p1)||ptsInRange.contains(p2)){
+                edgesInRange.add(edge);
             }
-            toaddTRI[1] = p1;
-            toaddTRI[2] = p2;
-            toaddTRI[3] = s;
-            shapes.add(toaddTRI);
         }
+    for (int[][] edge : edgesInRange){
+            int[] p1 = edge[0];
+            int[] p2 = edge[1];
+            boolean front = true;
+            /*
+            for (int[] pt : ptsInRange){
+                if (pt==p1||pt==p2) break;
+                    if (isInside(p1,p2,s,pt)){
+                        front = false;
+                        break;
+                    }
+            }
+                    */
+            //outerloop:
+                edge[2][0] = #FFFFFF;
+            for (int[][] ed : edgesInRange){
+                if (ed==edge) continue;
+                for (int tempv = 0; tempv<2; tempv++){
+                    int[] sp = edge[tempv];
+                    int[] contp1 = ed[0];
+                    int[] contp2 = ed[1];
+                    boolean c1Side = sidetest(sp,s,contp1);
+                    boolean c2Side = sidetest(sp,s,contp2);
+                    ed[2][0] = #00FF00;
+                    if (c1Side!=c2Side){
+                        ed[2][0] = #FFFF00;
+                        boolean behind = true;
+                        if (p1!=contp1&&p2!=contp1){
+                            if (sidetest(p1,p2,contp1)) behind = false;
+                        }
+                        if (p1!=contp2&&p2!=contp2){
+                            if (sidetest(p1,p2,contp2)) behind = false;
+                        }
 
-       // shapes.add(toadd);
+                        if (!behind){
+                        ed[2][0] = #FF0000;
+                        front = false;
+                        }
+                       // break outerloop;
+                    }
+                }
+            }
+            if (!front) continue;
+            int[][] triangle = new int[][]{new int[]{rcolor()},p1,p2,s};
+            shapes.add(triangle);
         }
+    
+}
 
+int rcolor(){
+    return color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
+}
+
+int[][] addTriangle(int col, int[] pA, int[] pB, int[] pC){
+    int[][] triangle = new int[][]{new int[]{col},pA,pB,pC};
+    shapes.add(triangle);
+    return triangle;
 }
 
 class sortByDegree implements Comparator<int[]>{

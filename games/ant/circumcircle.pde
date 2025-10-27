@@ -2,6 +2,13 @@ boolean isInside(int[] p1, int[] p2, int[] p3, int[] check){
     return !ccw(p1,p2,check)&!ccw(p2,p3,check)&!ccw(p3,p1,check);
 }
 
+boolean sidetest(int[] p1, int[] p2, int[] check){
+    int[] linep = new int[]{p2[0]-p1[0],p2[1]-p1[1]};
+    int[] pointp = new int[]{check[0]-p1[0],check[1]-p1[1]};
+    int crossprod = linep[0]*pointp[1]-pointp[0]*linep[1];
+    return crossprod>0;
+}
+
 boolean inCircumcircle(int[] p1, int[] p2, int[] p3, int[] check){
     int ax_ = p1[0]-check[0];
     int ay_ = p1[1]-check[1];
