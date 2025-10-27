@@ -3,14 +3,21 @@ import java.util.Collections;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-
+ArrayList<int[][]> edges = new ArrayList();
 ArrayList<int[]> points = new ArrayList();
 ArrayList<int[][]> shapes = new ArrayList();
 
 
 void setup(){
     size(500,500);
-    
+    int[] pa = new int[]{0,100};
+    int[] pb = new int[]{100,50};
+    int[] pc = new int[]{-100,90};
+    points.add(pa); points.add(pb); points.add(pc);
+    shapes.add(new int[][]{new int[]{#0000FF},pa,pb,pc});
+    edges.add(new int[][]{pa,pb});
+    edges.add(new int[][]{pb,pc});
+    edges.add(new int[][]{pc,pa});
 }
 void draw(){
     if (key('w')) camOffY++;
@@ -41,15 +48,15 @@ void mousePressed(){
     
     int[] s = screenToWorld(new int[]{mouseX,mouseY});
     if (s[1]<0) s[1]=0;
-    addPoint(s);
+   // addPoint(s);
+    points.add(s);
+    println(isInside(points.get(0),points.get(1),points.get(2),s));
     
 }
-
 void addPoint(int[] s){
     
     ArrayList<int[]> pts = new ArrayList();
     points.add(s);
-    
         for (int[] point : points){
             if (point == s){
                 continue;
@@ -58,16 +65,30 @@ void addPoint(int[] s){
             if (cont<50) pts.add(point);
         }
         if (pts.size()>=2){
-        int[][] toadd = new int[pts.size()+2][];
-      //  toadd[0] = new int[]{ color( (int)(255*Math.random()),(int)(255*Math.random()),(int)(255*Math.random()))  };
-        toadd[0] = new int[]{#c2deff};
-        toadd[1] = s;
+        int[][] toadd = new int[pts.size()+1][];
+      //  toadd[0] = new int[]{#c2deff};
         for(int i = 0; i<pts.size(); i++){
-            toadd[i+2] = pts.get(i);
+            toadd[i+1] = pts.get(i);
         }
         //println("add");
         shapeSort(toadd);
-        shapes.add(toadd);
+        for (int i = 1; i<toadd.length; i++){
+            int[][] toaddTRI = new int[4][];
+            toaddTRI[0] = new int[]{ color( (int)(255*Math.random()),(int)(255*Math.random()),(int)(255*Math.random()))  };
+            int[] p1 = toadd[i];
+            int[] p2;
+            if (i+1>=toadd.length){
+                p2 = toadd[1];
+            } else {
+                p2 = toadd[i+1];
+            }
+            toaddTRI[1] = p1;
+            toaddTRI[2] = p2;
+            toaddTRI[3] = s;
+            shapes.add(toaddTRI);
+        }
+
+       // shapes.add(toadd);
         }
 
 }
