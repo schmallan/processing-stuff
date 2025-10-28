@@ -7,17 +7,11 @@ ArrayList<int[][]> edges = new ArrayList();
 ArrayList<int[]> points = new ArrayList();
 ArrayList<int[][]> shapes = new ArrayList();
 
-int range = 500;
+int range = 50;
 void setup(){
     size(500,500);
-    int[] pa = new int[]{0,100};
-    int[] pb = new int[]{100,50};
-    int[] pc = new int[]{-100,90};
-    points.add(pa); points.add(pb); points.add(pc);
-    addTriangle(#000000,pa,pb,pc);
-    edges.add(new int[][]{pa,pb,new int[]{#00FF00}});
-    edges.add(new int[][]{pb,pc,new int[]{#00FF00}});
-    edges.add(new int[][]{pc,pa,new int[]{#00FF00}});
+   // println(rayIntersect(new int[]{0,0},new int[]{10,0},new int[]{5,0},new int[]{15,0}));
+   // println(isInside(new int[]{-1,0},new int[]{1,0},new int[]{0,-10},new int[]{0,-1}));
 }
 void draw(){
     if (key('w')) camOffY++;
@@ -52,84 +46,96 @@ void draw(){
         line(p1[0],p1[1],p2[0],p2[1]);
     }
     
+
+
+
+}
+
+void test(int[] s){
+    points.add(s);
+    int ps= points.size();
+    if (ps%3==0){
+        shapes.add(new int[][]{new int[]{rcolor()},points.get(ps-3),points.get(ps-2),points.get(ps-1)});
+        
+    }
+    if (ps==6){
+        println(isOverlap(points.get(ps-6),points.get(ps-5),points.get(ps-4),points.get(ps-3),points.get(ps-2),points.get(ps-1)));
+        
+    }
+    if (ps<7) return;
+    shapes = new ArrayList();
+    points = new ArrayList();
 }
 void mousePressed(){
     
-    int[] s = screenToWorld(new int[]{mouseX,mouseY});
+    int[] s = screenToWorld(new int[]{mouseX/15*15,mouseY/15*15});
     if (s[1]<0) s[1]=0;
-    addPoint(s);
-    points.add(s);
-    //println(isInside(points.get(0),points.get(1),points.get(2),s));
-    
+    test(s);
 }
 void addPoint(int[] s){
-    
+
+
+
     ArrayList<int[]> ptsInRange = new ArrayList();
     //points.add(s);
         for (int[] point : points){
             
             int cont = (int)(sqrt(pow(point[0]-s[0],2)+pow(point[1]-s[1],2)));
-            if (cont<range) ptsInRange.add(point);
+            if (cont<range*2) ptsInRange.add(point);
         }
     ArrayList<int[][]> edgesInRange = new ArrayList();
-        for (int[][] edge : edges){
+    ArrayList<int[][]> trianglesInRange = new ArrayList();
+    for (int[][] edge : edgesInRange){
+            edge[2][0] = #000000;
             int[] p1 = edge[0];
             int[] p2 = edge[1];
+            
             if (ptsInRange.contains(p1)||ptsInRange.contains(p2)){
                 edgesInRange.add(edge);
+            edge[2][0] = #FFFFFF;
+                
             }
         }
-    for (int[][] edge : edgesInRange){
-            int[] p1 = edge[0];
-            int[] p2 = edge[1];
-            boolean front = true;
-            /*
-            for (int[] pt : ptsInRange){
-                if (pt==p1||pt==p2) break;
-                    if (isInside(p1,p2,s,pt)){
-                        front = false;
-                        break;
-                    }
-            }
-                    */
-            //outerloop:
-                edge[2][0] = #FFFFFF;
-            for (int[][] ed : edgesInRange){
-                if (ed==edge) continue;
-                for (int tempv = 0; tempv<2; tempv++){
-                    int[] sp = edge[tempv];
-                    int[] contp1 = ed[0];
-                    int[] contp2 = ed[1];
-                    boolean c1Side = sidetest(sp,s,contp1);
-                    boolean c2Side = sidetest(sp,s,contp2);
-                    ed[2][0] = #00FF00;
-                    if (c1Side!=c2Side){
-                        ed[2][0] = #FFFF00;
-                        boolean behind = true;
-                        if (p1!=contp1&&p2!=contp1){
-                            if (sidetest(p1,p2,contp1)) behind = false;
-                        }
-                        if (p1!=contp2&&p2!=contp2){
-                            if (sidetest(p1,p2,contp2)) behind = false;
-                        }
 
-                        if (!behind){
-                        ed[2][0] = #FF0000;
-                        front = false;
-                        }
-                       // break outerloop;
-                    }
-                }
+    for (int[][] shape : shapes){
+           // shape[0][0] = #000000;
+            int[] p1 = shape[1];
+            int[] p2 = shape[2];
+            int[] p3 = shape[3];
+            
+            if (ptsInRange.contains(p1)||ptsInRange.contains(p2)||ptsInRange.contains(p3)){
+                trianglesInRange.add(shape);
+           // shape[0][0] = #FFFFFF;
+                
             }
-            if (!front) continue;
-            int[][] triangle = new int[][]{new int[]{rcolor()},p1,p2,s};
-            shapes.add(triangle);
         }
+
+    if (edgesInRange.size()==0 && ptsInRange.size()>=2){
+        int[] p1 = ptsInRange.get(0);
+        int[] p2 = ptsInRange.get(1);
+        int[][] ne = (new int[][]{p1,p2,new int[]{#00FF00}});
+        edges.add(ne);
+        edgesInRange.add(ne);
+    }
     
+    outerloop:
+    for (int[][] edge : edgesInRange){
+        for (int[][] tri : trianglesInRange){
+            if(isOverlap(s,edge[0],edge[1],tri[1],tri[2],tri[3])) continue outerloop;
+        }
+        
+        println("success");
+        addTriangle(rcolor(),s,edge[0],edge[1]);
+        //edges.remove(edge);
+        edges.add(new int[][]{s,edge[0],new int[]{#FFFFFF}});
+        edges.add(new int[][]{s,edge[1],new int[]{#FFFFFF}});
+    }
+    
+    points.add(s);
 }
 
 int rcolor(){
-    return color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
+    return color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255),50);
 }
 
 int[][] addTriangle(int col, int[] pA, int[] pB, int[] pC){
@@ -146,17 +152,9 @@ class sortByDegree implements Comparator<int[]>{
     }
 }
 
-void shapeSort(int[][] inp){
-
-  int centerX = 0;
-  int centerY = 0;
-  for (int i = 1; i<inp.length; i++){
-    int[] point = inp[i];
-    centerX+=point[0];
-    centerY+=point[1];
-  }
-  centerX/=(inp.length-1);
-  centerY/=(inp.length-1);
+void shapeSort(int[][] inp, int[] centroid){
+    int centerX = centroid[0];
+    int centerY = centroid[1];
 
   for (int i = 1; i<inp.length; i++){
     int[] oldPoint = inp[i];
