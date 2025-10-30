@@ -7,20 +7,45 @@ ArrayList<int[][]> edges = new ArrayList();
 ArrayList<int[]> points = new ArrayList();
 ArrayList<int[][]> shapes = new ArrayList();
 
-int range = 50;
+int range = 100;
 void setup(){
     size(500,500);
    // println(rayIntersect(new int[]{0,0},new int[]{10,0},new int[]{5,0},new int[]{15,0}));
    // println(isInside(new int[]{-1,0},new int[]{1,0},new int[]{0,-10},new int[]{0,-1}));
 }
+
+int pCx = 0;
+int pCy = 0;
 void draw(){
-    if (key('w')) camOffY++;
-    if (key('s')) camOffY--;
-    if (key('d')) camOffX++;
-    if (key('a')) camOffX--;
+    pCx= 0;
+    pCy= 0;
+    if (key('w')) pCy=5;
+    if (key('s')) pCy=-5;
+    if (key('d')) pCx=5;
+    if (key('a')) pCx=-5;
+
+    int ncX = camOffX+pCx;
+    int ncY = camOffY+pCy;
+    boolean v = false;
+    for (int[][] shape : shapes){
+        //println(ncX);
+        if (isInside(shape[1],shape[2],shape[3],new int[]{camOffX,camOffY})){
+            println("yay");
+            v=true;
+            break;
+        }
+    }
+    if (camOffY+ncY>=-10) v = true;
+    if (true){
+        camOffX=ncX;
+        camOffY=ncY;
+    }
     
     background(#c2deff);
     fill(#735841);
+
+    
+
     noStroke();
     int[] lm = worldToScreen(new int[]{0,0});
     rect(0,lm[1],width,height-lm[1]);
@@ -37,18 +62,20 @@ void draw(){
         shapeRender(i);
    //println();
     }
+    
     for (int[][] i : edges){
         int[] p1 = worldToScreen(i[0]);
         int[] p2 = worldToScreen(i[1]);
         
-        stroke(i[2][0]);
-        strokeWeight(3);
+        //stroke(i[2][0]);
+        stroke(#FFFFFF);
+        strokeWeight(1);
         line(p1[0],p1[1],p2[0],p2[1]);
     }
-    
 
 
-
+    fill(#000000);
+    ellipse(width/2,height/2,12,12);
 }
 
 void test(int[] s){
@@ -68,9 +95,10 @@ void test(int[] s){
 }
 void mousePressed(){
     
-    int[] s = screenToWorld(new int[]{mouseX/15*15,mouseY/15*15});
+    int[] s = screenToWorld(new int[]{mouseX,mouseY});
     if (s[1]<0) s[1]=0;
-    test(s);
+//    test(s);
+addPoint(s);
 }
 void addPoint(int[] s){
 
@@ -81,61 +109,74 @@ void addPoint(int[] s){
         for (int[] point : points){
             
             int cont = (int)(sqrt(pow(point[0]-s[0],2)+pow(point[1]-s[1],2)));
-            if (cont<range*2) ptsInRange.add(point);
+            if (cont<range) ptsInRange.add(point);
         }
     ArrayList<int[][]> edgesInRange = new ArrayList();
     ArrayList<int[][]> trianglesInRange = new ArrayList();
-    for (int[][] edge : edgesInRange){
+    for (int[][] edge : edges){
             edge[2][0] = #000000;
             int[] p1 = edge[0];
             int[] p2 = edge[1];
             
-            if (ptsInRange.contains(p1)||ptsInRange.contains(p2)){
+            if (ptsInRange.contains(p1)&&ptsInRange.contains(p2)){
                 edgesInRange.add(edge);
             edge[2][0] = #FFFFFF;
                 
             }
         }
 
-    for (int[][] shape : shapes){
+
+    for (int i = 0; i<shapes.size();i++){
+        int[][] shape = shapes.get(i);
            // shape[0][0] = #000000;
             int[] p1 = shape[1];
             int[] p2 = shape[2];
             int[] p3 = shape[3];
-            
+            if (isInside(shape[1],shape[2],shape[3],s)){
+                shapes.remove(i);
+                i--;
+                continue;
+            }
             if (ptsInRange.contains(p1)||ptsInRange.contains(p2)||ptsInRange.contains(p3)){
                 trianglesInRange.add(shape);
            // shape[0][0] = #FFFFFF;
                 
             }
         }
+      //  println(edgesInRange.size());
 
     if (edgesInRange.size()==0 && ptsInRange.size()>=2){
         int[] p1 = ptsInRange.get(0);
         int[] p2 = ptsInRange.get(1);
         int[][] ne = (new int[][]{p1,p2,new int[]{#00FF00}});
         edges.add(ne);
+       // println("newedge created");
         edgesInRange.add(ne);
     }
-    
+    int tc = 0;
     outerloop:
     for (int[][] edge : edgesInRange){
+        edge[2][0]=#00FFFF;
         for (int[][] tri : trianglesInRange){
-            if(isOverlap(s,edge[0],edge[1],tri[1],tri[2],tri[3])) continue outerloop;
+            if(isOverlap(s,edge[0],edge[1],tri[1],tri[2],tri[3])) {
+               // addTriangle(#440000,s,edge[0],edge[1]);
+               // tri[0][0] = #000000;
+                continue outerloop;
+            }
         }
-        
-        println("success");
-        addTriangle(rcolor(),s,edge[0],edge[1]);
+        tc++;
+        addTriangle(#c2deff,s,edge[0],edge[1]);
         //edges.remove(edge);
-        edges.add(new int[][]{s,edge[0],new int[]{#FFFFFF}});
-        edges.add(new int[][]{s,edge[1],new int[]{#FFFFFF}});
+       edges.add(new int[][]{s,edge[0],new int[]{#FFFFFF}});
+       edges.add(new int[][]{s,edge[1],new int[]{#FFFFFF}});
     }
-    
+    if (s[1]<50||tc>0){
     points.add(s);
+    }
 }
 
 int rcolor(){
-    return color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255),50);
+    return color((int)(Math.random()*255),(int)(Math.random()*255),(int)(Math.random()*255));
 }
 
 int[][] addTriangle(int col, int[] pA, int[] pB, int[] pC){
