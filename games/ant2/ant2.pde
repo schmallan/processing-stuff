@@ -3,17 +3,19 @@ camera cam = new camera();
 chunk c = new chunk(0,0);
 void setup(){
     size(500,500);
-    c.points.add(new point(10,10));
+    c.edges.add(new edge(new point(0,0),new point(15,0)));
 }
 void draw(){
     movement();
     background(255);
-    c.renderInfo();
     c.render();
 }
 
+triangle s;
 void mousePressed(){
-    c.add(cam.toWorld(new point(mouseX,mouseY)));
+    point n = cam.toWorld(new point(mouseX,mouseY));
+    c.points.add(n);
+    c.triangulate(n);
 }
 
 HashMap<Character,Boolean> keys = new HashMap();
@@ -43,8 +45,44 @@ void keyReleased(){
     keys.put(key,false);
 }
 
-int snapRange = 15;
+int snapRange = 150;
 class chunk{
+    
+    void triangulate(point p){
+        int inl = edges.size();
+        int tnl = triangles.size();
+        ol:
+        for (int i = 0; i<inl; i++){
+            edge e = edges.get(i);
+            triangle nt = new triangle(e.p1,e.p2,p);
+
+            edge n1 = new edge(e.p1,p);
+            edge n2 = new edge(e.p2,p);
+
+            for (int j = 0; j<inl; j++){
+                edge c = edges.get(j);
+                if (rayIntersect(n1,c)) continue ol;
+                if (rayIntersect(n2,c)) continue ol;
+                
+            }
+            for (int j = 0; j<tnl; j++){
+                triangle t = triangles.get(j);
+                for (int k = 0; k<3; k++){
+                    point testp = t.getP(k);
+                    if (isInside(nt, testp, false)) continue ol;
+                }
+                
+            }
+            
+            //create triangl
+            triangles.add(nt);
+            edges.add(n1);
+            edges.add(n2);
+            
+            
+        }
+    }
+
     void renderInfo(){
         stroke(0);
         fill(color(255,0,0,10));
@@ -61,57 +99,21 @@ class chunk{
     ArrayList<edge> edges;
     ArrayList<triangle> triangles;
 
-    //
-    void triangulate(point p){
-        ArrayList<point> pointsInRange = new ArrayList();
-        for (point c : points){
-
-        }
-    }
-
     void render(){
         for (triangle t : triangles){
+            noStroke();
             t.render();
         }
         for (edge e:edges){
+            stroke(0);
+            strokeWeight(3);
             e.render();
         }
-
         noStroke();
         fill(0);
         for (point p:points){
             p.render(1);
         }
-    }
-
-    boolean add(point p){
-        for (point cont : points){
-            if (p.x==cont.x && p.y==cont.y) return false;
-        }
-        points.add(p);
-        return true;
-    }
-    boolean add(edge e){
-        e.align();
-        for (edge cont : edges){
-            if (e.equals(cont)){
-                println("alert: duplicate edge");
-                return false;
-            }
-        }
-        edges.add(e);
-        return true;
-    }
-    boolean add(triangle t){
-        t.align();
-        for (triangle cont : triangles){
-            if (t.equals(cont)){
-                println("alert: duplicate triangle");
-                return false;
-            }
-        }
-        triangles.add(t);
-        return true;
     }
 
     chunk(int pX,int pY){
