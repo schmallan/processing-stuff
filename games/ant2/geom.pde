@@ -21,7 +21,7 @@ class point{
     }
 }
 class edge{
-    int col = #11000000;
+    int col = #000000;
     public point p1;
     public point p2;
     edge(){};
