@@ -21,7 +21,7 @@ class point{
     }
 }
 class edge{
-    int col = #000000;
+    int col = #9e8a78;
     public point p1;
     public point p2;
     edge(){};
@@ -62,7 +62,7 @@ class edge{
     }
 }
 class triangle{
-    int col = #33FF0000;
+    int col = #9e8a78;
     point c;
     point p1;
     point p2;

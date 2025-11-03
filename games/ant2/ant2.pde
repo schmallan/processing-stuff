@@ -19,12 +19,16 @@ HashMap<Integer,HashMap<Integer,chunk>> chunks = new HashMap();
 void setup(){
     size(500,500);
     add(c);
+    add(new chunk(-1,0));
+    add(new chunk(0,-1));
+    add(new chunk(-1,-1));
+    
     
     c.add(new edge(new point(-100,0),new point(100,0)));
     point n = new point(0,100);
-    c.triangulate(n);
-    n = new point(0,-100);
-    c.triangulate(n);
+    c.triangulate(n,c.triangles);
+    //n = new point(0,-100);
+    //c.triangulate(n,c.triangles);
     
 }
 chunk getChunk(int x, int y){
@@ -52,12 +56,20 @@ void drawChunks(){
     //println(chunkCenter.x);
    // println(chunkCenter.y);
     
-    final int loadrad = 1;
+    final int loadrad = max(1,(int)cam.scale);
     for (int i = -loadrad; i<=loadrad; i++){
         for (int k = -loadrad; k<=loadrad; k++){
             chunk l = getChunk(chunkCenter.x+i,chunkCenter.y+k);
             if (l==null) continue;
-            l.renderInfo();
+            //l.renderInfo();
+            
+            point mp = cam.toWorld(new point(mouseX,mouseY));
+            if (l.pending.size()>0) l.pending = new ArrayList();
+            if (i==0&k==0&mousePressed){
+            l.pending = new ArrayList();
+            mp.y = max(0,mp.y);
+            l.triangulate(mp,l.pending);
+            }
             l.render();
         }
     }
@@ -65,21 +77,37 @@ void drawChunks(){
 }
 
 void draw(){
+    pOffx = 0;
+    pOffy = 0;
     movement();
-    background(255);
+    background(#a3cfe3);
+    fill(#735943);
+    int wy = cam.toScreen(new point(0,0)).y;
+    noStroke();
+    rect(0,wy,width,height-wy);
 
     drawChunks();
-    fill(0);
-    point wo = cam.toScreen(new point(0,0));
-    ellipse(width/2,height/2,10,10);
-    fill(#FF0000);
-    ellipse(wo.x,wo.y,10,10);
+    fill(0);    noStroke();
+    ellipse(width/2,height/2,10*cam.scale,10*cam.scale);
+    
+    point sro = cam.toWorld(new point(mouseX,mouseY));
+    sro.x-=150;
+    sro.y-=150;
+    sro = cam.toScreen(sro);
+    fill(color(255,0,0,0));
+    strokeWeight(1);
+    stroke(#88000000);
+    if (mousePressed) rect(sro.x,sro.y,snapRange*2*cam.scale,snapRange*2*cam.scale);
+    
+    cam.camOffX +=pOffx;
+    cam.camOffY+= pOffy;
     
 }
 
 triangle s;
-void mousePressed(){
+void mouseReleased(){
     point n = cam.toWorld(new point(mouseX,mouseY));
+    n.y = max(0,n.y);
     point cs = chunkCenter(n.x,n.y);
     c = getChunk(cs.x,cs.y);
     if (c==null){
@@ -87,17 +115,20 @@ void mousePressed(){
         add(c);
     }
     c.points.add(n);
-    c.triangulate(n);
+    c.triangulate(n,c.triangles);
 }
 
 HashMap<Character,Boolean> keys = new HashMap();
 float speed = 2;
 float zoomspeed = 1.05;
+
+float pOffx = 0;
+float pOffy = 0;
 void movement(){
-    if (key('w')) cam.camOffY+=speed/cam.scale;
-    if (key('s')) cam.camOffY-=speed/cam.scale;
-    if (key('a')) cam.camOffX+=speed/cam.scale;
-    if (key('d')) cam.camOffX-=speed/cam.scale;
+    if (key('w')) pOffy+=speed;
+    if (key('s')) pOffy-=speed;
+    if (key('a')) pOffx+=speed;
+    if (key('d')) pOffx-=speed;
     if (key('i')) cam.scale=min(100,cam.scale*zoomspeed);
     if (key('o')) cam.scale=max(0.1,cam.scale/zoomspeed);
     
@@ -117,144 +148,10 @@ void keyReleased(){
     keys.put(key,false);
 }
 
-int snapRange = 150;
-int abortRange = 20;
-class chunk{
-
-    void add(edge e){
-        e.align();
-        for (edge cont : edges){
-            if (e.equals(cont)) return;
-        }
-        edges.add(e);
-    }
-    
-    void triangulate(point p){
-        ArrayList<edge> edgesInRange = new ArrayList();
-        ArrayList<edge> edgesInOuterRange = new ArrayList();
-      //  ArrayList<triangle> trianglesInRange = new ArrayList();
-        ArrayList<triangle> trianglesInOuterRange = new ArrayList();
-        
-        for (int i = -1; i<=1; i++){
-            for (int k = -1; k<=1; k++){
-                chunk iChunk = getChunk(i+posX,k+posY);
-                if (iChunk==null) continue;
-                for (edge cEdge : iChunk.edges){
-                    cEdge.col = #44000000;
-                int d1 = max(abs(cEdge.p1.x-p.x),abs(cEdge.p1.y-p.y));
-                int d2 = max(abs(cEdge.p2.x-p.x),abs(cEdge.p2.y-p.y));
-                int td = max(d1,d2);
-                if (td<abortRange){
-                    return;
-                }
-                if (td<snapRange*2){
-                    edgesInOuterRange.add(cEdge);
-                //  cEdge.col = #00FF00;
-                }
-                if (td<snapRange){
-                    edgesInRange.add(cEdge);//cEdge.col = #0000FF;
-                }
-            }
-            for (triangle cTriangle : iChunk.triangles){
-                int d1 = max(abs(cTriangle.p1.x-p.x),abs(cTriangle.p1.x-p.x));
-                int d2 = max(abs(cTriangle.p2.x-p.x),abs(cTriangle.p2.x-p.x));
-                int d3 = max(abs(cTriangle.p3.x-p.x),abs(cTriangle.p3.x-p.x));
-                
-                int td = max(d1,d2,d3);
-                if (td<snapRange){
-                // trianglesInRange.add(cTriangle);
-                }if (td<snapRange*2){
-                    trianglesInOuterRange.add(cTriangle);
-                }
-            }
-            
-        }}
-
-        int inl = edgesInRange.size();
-       // int tnl = trianglesInRange.size();
-
-
-        ol:
-        for (int i = 0; i<inl; i++){
-            edge e = edgesInRange.get(i);
-            triangle nt = new triangle(e.p1,e.p2,p);
-
-            edge n1 = new edge(e.p1,p);
-            edge n2 = new edge(e.p2,p);
-
-            for (int j = 0; j<edgesInOuterRange.size(); j++){
-                edge c = edgesInOuterRange.get(j);
-                if (rayIntersect(n1,c)) continue ol;
-                if (rayIntersect(n2,c)) continue ol;
-                
-            }
-            for (int j = 0; j<trianglesInOuterRange.size(); j++){
-                triangle t = trianglesInOuterRange.get(j);
-                for (int k = 0; k<3; k++){
-                    point testp = t.getP(k);
-                    if (isInside(nt, testp, false)) continue ol;
-                }
-                
-            }
-            
-            //create triangl
-            triangles.add(nt);
-            add(n1);
-            add(n2);
-            
-            
-        }
-    }
-
-    void renderInfo(){
-        stroke(0);
-        fill(color(255,0,0,10));
-        
-        point adjP = cam.toScreen(new point(posX*sizeX,posY*sizeY));
-        
-        rect(adjP.x,adjP.y,sizeX*cam.scale,sizeY*cam.scale);
-    }
-    static final int sizeX = 500;
-    static final int sizeY = 500;
-    int posX;
-    int posY;
-    ArrayList<point> points;
-    ArrayList<edge> edges;
-    ArrayList<triangle> triangles;
-
-    void render(){
-        for (triangle t : triangles){
-            noStroke();
-            t.render();
-        }
-        for (edge e:edges){
-            stroke(0);
-            strokeWeight(3);
-            e.render();
-        }
-        noStroke();
-        fill(0);
-        for (point p:points){
-            p.render(1);
-        }
-    }
-
-    chunk(int pX,int pY){
-        this();
-        posX = pX;
-        posY = pY;
-    }
-    chunk(){
-        points = new ArrayList();
-        edges = new ArrayList();
-        triangles = new ArrayList();
-    }
-}
-
 class camera{
     float camOffX = 0;
     float camOffY = 0;
-    float scale = 10;
+    float scale = 1;
     camera(){}
     point toWorld(point inp){
        point ret = new point(
